@@ -5,7 +5,7 @@ PORT=$1
 USERNAME=$2
 PASSWORD=$3
 
-INSTALL_DIR="/opt/copyparty"
+INSTALL_DIR="/root/copyparty"
 DATA_DIR="$INSTALL_DIR/data"
 
 echo "[1/5] Installing dependencies..."
@@ -25,7 +25,7 @@ cat > $INSTALL_DIR/start.sh <<EOF
 PORT="$1"      
 USERNAME="$2"   
 PASSWORD="$3"  
-DATA_DIR="/opt/copyparty/data"
+DATA_DIR="/root/copyparty/data"
 INSTALL_DIR="/opt/copyparty"
 /usr/bin/python3 "$INSTALL_DIR/copyparty-sfx.py" -v "$DATA_DIR" -a "$USERNAME:$PASSWORD" --http-only -p "$PORT"
 EOF
