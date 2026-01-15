@@ -27,7 +27,7 @@ USERNAME="\$2"
 PASSWORD="\$3"
 DATA_DIR="$DATA_DIR"
 INSTALL_DIR="$INSTALL_DIR"
-/usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py -v "$DATA_DIR:files:rw" -a "$USERNAME:$PASSWORD" --http-only -p "$PORT" --xff-hdr x-forwarded-for --xff-src 127.0.0.1/32 --rproxy 1
+/usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py -v "$DATA_DIR:files:rw:u:$USERNAME" -a "$USERNAME:$PASSWORD" --http-only -p "$PORT" --xff-hdr x-forwarded-for --xff-src 127.0.0.1/32 --rproxy 1
 EOF
 
 chmod +x $INSTALL_DIR/start.sh
