@@ -22,9 +22,9 @@ chmod +x $INSTALL_DIR/copyparty-sfx.py
 echo "[4/5] Creating start script..."
 cat > $INSTALL_DIR/start.sh <<EOF
 #!/bin/bash
-USERNAME="$1"
-PASSWORD="$2"
-PORT="$3"
+USERNAME="$USERNAME"
+PASSWORD="$PASSWORD"
+PORT=$PORT
 DATA_DIR="/opt/copyparty/data"
 /usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py -v $DATA_DIR -a "\$USERNAME:\$PASSWORD" --http-only -p \$PORT
 EOF
