@@ -1,51 +1,122 @@
 #!/bin/bash
 set -e
 
-PORT=$1
-USERNAME=$2
-PASSWORD=$3
+# ======================
+# 参数
+# ======================
+PORT="$1"
+ADMIN_USER="$2"
+ADMIN_PASS="$3"
+
+if [ -z "$PORT" ] || [ -z "$ADMIN_USER" ] || [ -z "$ADMIN_PASS" ]; then
+  echo "用法: bash install_copyparty.sh <port> <admin_user> <admin_pass>"
+  exit 1
+fi
 
 INSTALL_DIR="/root/copyparty"
 DATA_DIR="$INSTALL_DIR/data"
 
-echo "[1/5] Installing dependencies..."
-apt update
-apt install -y python3 wget nginx
+echo "========== Copyparty 一键安装 =========="
 
-echo "[2/5] Creating directories..."
-mkdir -p "$DATA_DIR"
+# ======================
+# 1. 安装依赖
+# ======================
+echo "[1/6] Installing dependencies..."
+apt update -y
+apt install -y python3 wget nginx curl
 
-echo "[3/5] Downloading copyparty..."
-wget -N https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py -O $INSTALL_DIR/copyparty-sfx.py
-chmod +x $INSTALL_DIR/copyparty-sfx.py
+# ======================
+# 2. 创建目录
+# ======================
+echo "[2/6] Creating directories..."
+mkdir -p "$DATA_DIR"/{public,private,inbox,sharex}
 
-echo "[4/5] Creating start script..."
-cat > $INSTALL_DIR/start.sh <<EOF
-#!/bin/bash
-PORT="\$1"
-USERNAME="\$2"
-PASSWORD="\$3"
-DATA_DIR="$DATA_DIR"
-INSTALL_DIR="$INSTALL_DIR"
+# ======================
+# 3. 下载 copyparty
+# ======================
+echo "[3/6] Downloading copyparty..."
+wget -q -N https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py \
+  -O "$INSTALL_DIR/copyparty-sfx.py"
+chmod +x "$INSTALL_DIR/copyparty-sfx.py"
 
-/usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py -v "$DATA_DIR:files:r" -a "$USERNAME:$PASSWORD" --http-only -p "$PORT" --xff-hdr x-forwarded-for --xff-src 127.0.0.1/32 --rproxy 1
+# ======================
+# 4. 生成配置文件
+# ======================
+echo "[4/6] Creating config..."
+cat > "$INSTALL_DIR/copyparty.conf" <<EOF
+[global]
+  p: $PORT
+  z, qr
+  e2dsa
+  e2ts
+
+[accounts]
+  $ADMIN_USER: $ADMIN_PASS
+  user: user123
+
+[/]
+  $DATA_DIR
+  accs:
+    r: *
+
+[/public]
+  $DATA_DIR/public
+  accs:
+    r: *
+
+[/private]
+  $DATA_DIR/private
+  accs:
+    r: user
+    rwmd: $ADMIN_USER
+
+[/inbox]
+  $DATA_DIR/inbox
+  accs:
+    w: *
+  flags:
+    e2d
+    nodupe
+
+[/sharex]
+  $DATA_DIR/sharex
+  accs:
+    wG: *
+    rwmd: $ADMIN_USER
+  flags:
+    e2d, d2t, fk: 4
 EOF
 
-chmod +x $INSTALL_DIR/start.sh
+# ======================
+# 5. 启动脚本
+# ======================
+echo "[5/6] Creating start script..."
+cat > "$INSTALL_DIR/start.sh" <<EOF
+#!/bin/bash
+exec /usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py \\
+  -c $INSTALL_DIR/copyparty.conf \\
+  --http-only \\
+  --xff-hdr x-forwarded-for \\
+  --xff-src 127.0.0.1/32 \\
+  --rproxy 1
+EOF
 
-echo "[5/5] Creating systemd service..."
-cat >/etc/systemd/system/copyparty.service <<EOF
+chmod +x "$INSTALL_DIR/start.sh"
+
+# ======================
+# 6. systemd 服务
+# ======================
+echo "[6/6] Creating systemd service..."
+cat > /etc/systemd/system/copyparty.service <<EOF
 [Unit]
-Description=copyparty file server
+Description=Copyparty File Server
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_DIR/start.sh $PORT $USERNAME $PASSWORD
+ExecStart=$INSTALL_DIR/start.sh
 WorkingDirectory=$INSTALL_DIR
 Restart=always
-RestartSec=5
-StartLimitBurst=3
-StartLimitIntervalSec=60
+RestartSec=3
 User=root
 
 [Install]
@@ -55,17 +126,28 @@ EOF
 systemctl daemon-reexec
 systemctl daemon-reload
 systemctl enable copyparty
-systemctl start copyparty
+systemctl restart copyparty
 
 sleep 3
-if curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:$PORT/ | grep -q "200"; then
-    echo "===================================="
-    echo "Copyparty installed successfully!"
-    echo "Access URL: http://<your-server-ip>:$PORT/"
-    echo "Username: $USERNAME"
-    echo "Password: $PASSWORD"
-    echo "===================================="
+
+# ======================
+# 验证
+# ======================
+if curl -s http://127.0.0.1:$PORT/ >/dev/null; then
+  echo "======================================"
+  echo "✅ Copyparty 安装成功"
+  echo
+  echo "访问地址: http://<服务器IP>:$PORT/"
+  echo "管理员:   $ADMIN_USER"
+  echo "密码:     $ADMIN_PASS"
+  echo
+  echo "目录说明:"
+  echo "  /public   公共只读"
+  echo "  /private  私有目录"
+  echo "  /inbox    匿名投递"
+  echo "  /sharex   私有上传"
+  echo "======================================"
 else
-    echo "Copyparty service failed to start. Check logs with:"
-    echo "  sudo journalctl -u copyparty -f"
+  echo "❌ Copyparty 启动失败"
+  journalctl -u copyparty -n 50 --no-pager
 fi
