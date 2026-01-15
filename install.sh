@@ -22,10 +22,11 @@ chmod +x $INSTALL_DIR/copyparty-sfx.py
 echo "[4/5] Creating start script..."
 cat > $INSTALL_DIR/start.sh <<EOF
 #!/bin/bash
-USERNAME="$USERNAME"
-PASSWORD="$PASSWORD"
-PORT=$PORT
+PORT="$1"      
+USERNAME="$2"   
+PASSWORD="$3"  
 DATA_DIR="/opt/copyparty/data"
+INSTALL_DIR="/opt/copyparty"
 /usr/bin/python3 $INSTALL_DIR/copyparty-sfx.py -v $DATA_DIR -a "\$USERNAME:\$PASSWORD" --http-only -p \$PORT
 EOF
 
@@ -38,7 +39,7 @@ Description=copyparty file server
 After=network.target
 
 [Service]
-ExecStart=$INSTALL_DIR/start.sh
+ExecStart=$INSTALL_DIR/start.sh $PORT $USERNAME $PASSWORD
 WorkingDirectory=$INSTALL_DIR
 Restart=always
 RestartSec=5
