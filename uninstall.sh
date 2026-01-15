@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-INSTALL_DIR="/opt/copyparty"
+INSTALL_DIR="/root/copyparty"
 
 echo "[1/5] Stopping systemd service..."
 if systemctl is-active --quiet copyparty; then
