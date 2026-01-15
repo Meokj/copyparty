@@ -27,7 +27,7 @@ USERNAME="\$2"
 PASSWORD="\$3"
 DATA_DIR="$DATA_DIR"
 INSTALL_DIR="$INSTALL_DIR"
-/usr/bin/python3 \$INSTALL_DIR/copyparty-sfx.py -v \$DATA_DIR -a "\$USERNAME:\$PASSWORD" --http-only -p \$PORT
+/usr/bin/python3 "$INSTALL_DIR/copyparty-sfx.py" -v "$DATA_DIR:files:rw:*" -a "$USERNAME:$PASSWORD" --http-only -p "$PORT"
 EOF
 
 chmod +x $INSTALL_DIR/start.sh
