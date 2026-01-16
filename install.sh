@@ -62,7 +62,7 @@ cat > "$INSTALL_DIR/copyparty.conf" <<EOF
   $DATA_DIR/public
   accs:
     r: *
-    rwmd: ADMIN_USER
+    rwmd: $ADMIN_USER
 
 [/private]
   $DATA_DIR/private
