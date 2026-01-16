@@ -52,7 +52,6 @@ cat > "$INSTALL_DIR/copyparty.conf" <<EOF
 
 [accounts]
   $ADMIN_USER: $ADMIN_PASS
-  user: user123
 
 [/]
   $DATA_DIR
@@ -63,17 +62,17 @@ cat > "$INSTALL_DIR/copyparty.conf" <<EOF
   $DATA_DIR/public
   accs:
     r: *
+    rwmd: ADMIN_USER
 
 [/private]
   $DATA_DIR/private
   accs:
-    r: user
     rwmd: $ADMIN_USER
 
 [/inbox]
   $DATA_DIR/inbox
   accs:
-    w: *
+    w: $ADMIN_USER
   flags:
     e2d
     nodupe
@@ -81,7 +80,7 @@ cat > "$INSTALL_DIR/copyparty.conf" <<EOF
 [/sharex]
   $DATA_DIR/sharex
   accs:
-    wG: *
+    wG: $ADMIN_USER
     rwmd: $ADMIN_USER
   flags:
     e2d, d2t, fk: 4
@@ -140,13 +139,6 @@ if curl -s http://127.0.0.1:$PORT/ >/dev/null; then
   echo "访问地址: http://<服务器IP>:$PORT/"
   echo "管理员:   $ADMIN_USER"
   echo "密码:     $ADMIN_PASS"
-  echo
-  echo "目录说明:"
-  echo "  /public   公共只读"
-  echo "  /private  私有目录"
-  echo "  /inbox    匿名投递"
-  echo "  /sharex   私有上传"
-  echo "======================================"
 else
   echo "❌ Copyparty 启动失败"
   journalctl -u copyparty -n 50 --no-pager
