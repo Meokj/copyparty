@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# ======================
-# 参数
-# ======================
 PORT="$1"
 ADMIN_USER="$2"
 ADMIN_PASS="$3"
@@ -18,30 +15,18 @@ DATA_DIR="$INSTALL_DIR/data"
 
 echo "========== Copyparty 一键安装 =========="
 
-# ======================
-# 1. 安装依赖
-# ======================
 echo "[1/6] Installing dependencies..."
 apt update -y
 apt install -y python3 wget nginx curl
 
-# ======================
-# 2. 创建目录
-# ======================
 echo "[2/6] Creating directories..."
 mkdir -p "$DATA_DIR"/{public,private,inbox,sharex}
 
-# ======================
-# 3. 下载 copyparty
-# ======================
 echo "[3/6] Downloading copyparty..."
 wget -q -N https://github.com/9001/copyparty/releases/latest/download/copyparty-sfx.py \
   -O "$INSTALL_DIR/copyparty-sfx.py"
 chmod +x "$INSTALL_DIR/copyparty-sfx.py"
 
-# ======================
-# 4. 生成配置文件
-# ======================
 echo "[4/6] Creating config..."
 cat > "$INSTALL_DIR/copyparty.conf" <<EOF
 [global]
@@ -86,9 +71,6 @@ cat > "$INSTALL_DIR/copyparty.conf" <<EOF
     e2d, d2t, fk: 4
 EOF
 
-# ======================
-# 5. 启动脚本
-# ======================
 echo "[5/6] Creating start script..."
 cat > "$INSTALL_DIR/start.sh" <<EOF
 #!/bin/bash
@@ -102,9 +84,6 @@ EOF
 
 chmod +x "$INSTALL_DIR/start.sh"
 
-# ======================
-# 6. systemd 服务
-# ======================
 echo "[6/6] Creating systemd service..."
 cat > /etc/systemd/system/copyparty.service <<EOF
 [Unit]
@@ -129,9 +108,6 @@ systemctl restart copyparty
 
 sleep 3
 
-# ======================
-# 验证
-# ======================
 if curl -s http://127.0.0.1:$PORT/ >/dev/null; then
   echo "======================================"
   echo "✅ Copyparty 安装成功"
