@@ -9,7 +9,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/co2f2e/copyparty/main/install.
 
 * Uninstallation
 ```bash
-bash <(curl -Ls https://raw.githubusercontent.com/co2f2e/copyparty/main/uninstall.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/Meokj/copyparty/main/uninstall.sh)
 ```
 
 * Access
